@@ -35,6 +35,8 @@
     "uninstallerIcon": "public/favicon.ico"
   },
 
+  "npmRebuild": false,
+
   "publish": {
     "provider": "github",
     "releaseType": "release"
