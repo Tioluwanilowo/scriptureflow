@@ -70,7 +70,7 @@ jobs:
         run: |
           Remove-Item "node_modules/grandiose/build/Release/Processing.NDI.Lib.x64.dll" -ErrorAction SilentlyContinue
           Remove-Item "node_modules/grandiose/lib/win_x64/Processing.NDI.Lib.x64.dll" -ErrorAction SilentlyContinue
-          Write-Host "Removed bundled NDI v3 DLLs — app will use system NDI v5/v6 runtime"
+          Write-Host "Removed bundled NDI v3 DLLs - app will use system NDI v5/v6 runtime"
 
       # 1. vite build  → dist/
       # 2. tsc (electron)  → dist-electron/
