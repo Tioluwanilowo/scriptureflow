@@ -60,6 +60,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
   /** Open a URL in the system's default browser (safe external link handler) */
   openExternal: (url: string) => ipcRenderer.send('open-external', url),
 
+  // ── Auto-updater ─────────────────────────────────────────────────────────────
+  /** Fired when a new version is available and the download is starting. */
+  onUpdateAvailable: (callback: (version: string) => void): void => {
+    ipcRenderer.removeAllListeners('update-available');
+    ipcRenderer.on('update-available', (_event, version) => callback(version));
+  },
+
+  /** Fired periodically during download with a 0-100 progress value. */
+  onUpdateDownloadProgress: (callback: (percent: number) => void): void => {
+    ipcRenderer.removeAllListeners('update-download-progress');
+    ipcRenderer.on('update-download-progress', (_event, percent) => callback(percent));
+  },
+
+  /** Fired when the update has been fully downloaded and is ready to install. */
+  onUpdateDownloaded: (callback: (version: string) => void): void => {
+    ipcRenderer.removeAllListeners('update-downloaded');
+    ipcRenderer.on('update-downloaded', (_event, version) => callback(version));
+  },
+
+  /** Tell the main process to quit and install the downloaded update now. */
+  installUpdate: (): void => ipcRenderer.send('install-update'),
+
   // ── Realtime WebSocket bridge ──────────────────────────────────────────────
   // The main process owns the authenticated WS; the renderer tunnels audio/events
   // through IPC so the API key never appears in renderer network traffic.

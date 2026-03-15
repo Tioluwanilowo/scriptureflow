@@ -23,6 +23,31 @@ declare global {
 
       /** Open a URL in the system default browser */
       openExternal?: (url: string) => void;
+
+      // Auto-updater
+      onUpdateAvailable?: (callback: (version: string) => void) => void;
+      onUpdateDownloadProgress?: (callback: (percent: number) => void) => void;
+      onUpdateDownloaded?: (callback: (version: string) => void) => void;
+      installUpdate?: () => void;
+
+      // Realtime WebSocket bridge
+      realtimeConnect: (url: string, apiKey: string) => Promise<{ ok: boolean; error?: string }>;
+      realtimeSend: (data: string) => void;
+      realtimeDisconnect: () => void;
+      onRealtimeOpen: (callback: () => void) => void;
+      onRealtimeMessage: (callback: (data: string) => void) => void;
+      onRealtimeClose: (callback: (code: number, reason: string) => void) => void;
+      onRealtimeError: (callback: (message: string) => void) => void;
+
+      // Deepgram WebSocket bridge
+      deepgramConnect: (url: string, apiKey: string) => Promise<{ ok: boolean; error?: string }>;
+      deepgramSendAudio: (data: ArrayBuffer) => void;
+      deepgramSendJson: (data: string) => void;
+      deepgramDisconnect: () => void;
+      onDeepgramOpen: (callback: () => void) => void;
+      onDeepgramMessage: (callback: (data: string) => void) => void;
+      onDeepgramClose: (callback: (code: number, reason: string) => void) => void;
+      onDeepgramError: (callback: (message: string) => void) => void;
     };
   }
 }

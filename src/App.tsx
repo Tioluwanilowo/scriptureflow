@@ -9,6 +9,7 @@ import ThemeDesigner from './components/ThemeDesigner';
 import HotkeyManager from './components/HotkeyManager';
 import LiveOutputManager from './components/LiveOutputManager';
 import LiveStatusPanel from './components/LiveStatusPanel';
+import UpdateBanner from './components/UpdateBanner';
 import { useStore } from './store/useStore';
 import { loadDefaultBibles } from './lib/bibleEngine';
 import { bibleLibrary } from './lib/bible/BibleLibraryManager';
@@ -41,6 +42,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 font-sans">
+      <UpdateBanner />
       <HotkeyManager />
       <LiveOutputManager />
       <LiveStatusPanel />

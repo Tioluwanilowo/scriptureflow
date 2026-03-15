@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, screen, session, shell } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import fs from 'fs';
 import path from 'path';
 
@@ -311,6 +312,53 @@ function notifyDisplaysChanged() {
   }
 }
 
+// ── Auto-updater ───────────────────────────────────────────────────
+// electron-updater reads the `publish` field in electron-builder.json to know
+// which GitHub repo to check.  In dev mode we skip update checks so we don't
+// get spurious "update available" banners during development.
+
+function setupAutoUpdater() {
+  if (isDev) return;   // skip in development
+
+  autoUpdater.autoDownload = true;   // download silently in the background
+  autoUpdater.autoInstallOnAppQuit = false; // we'll prompt the user instead
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('[Updater] Checking for update…');
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    console.log(`[Updater] Update available: ${info.version}`);
+    mainWindow?.webContents.send('update-available', info.version);
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    console.log('[Updater] App is up to date.');
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    const pct = Math.round(progress.percent);
+    mainWindow?.webContents.send('update-download-progress', pct);
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log(`[Updater] Update downloaded: ${info.version}`);
+    mainWindow?.webContents.send('update-downloaded', info.version);
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error(`[Updater] Error: ${err.message}`);
+  });
+
+  // Check 5 s after startup, then every 4 hours
+  setTimeout(() => autoUpdater.checkForUpdates().catch(() => {}), 5_000);
+  setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 4 * 60 * 60 * 1_000);
+}
+
+ipcMain.on('install-update', () => {
+  autoUpdater.quitAndInstall(false, true);
+});
+
 // ── App lifecycle ──────────────────────────────────────────────────
 
 app.whenReady().then(() => {
@@ -326,6 +374,7 @@ app.whenReady().then(() => {
   // Guarantees channels are ready before any preload/renderer can invoke them.
   registerRealtimeHandlers();
   registerDeepgramHandlers();
+  setupAutoUpdater();
 
   createMainWindow();
   // Live window is opened on demand when the user clicks "Open Window" in Settings.
