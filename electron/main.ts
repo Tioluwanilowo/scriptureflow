@@ -91,7 +91,14 @@ let ndiLoadError: string | null = null;  // last error from require('grandiose')
 // The packaged app may not inherit the user's PATH, so we prepend these
 // directories before attempting to load grandiose so Windows can resolve
 // Processing.NDI.Lib.x64.dll even if it isn't in the process PATH.
+// IMPORTANT: NDI 6 Tools paths must come first — grandiose bundles a
+// stale NDI v3 DLL that uses an incompatible discovery protocol. By
+// injecting the NDI 6 Tools runtime directory into PATH before requiring
+// grandiose, Windows finds the v6 DLL from PATH (after the CI build step
+// has removed the bundled v3 DLL from grandiose's build/Release/ dir).
 const NDI_RUNTIME_PATHS = [
+  'C:\\Program Files\\NDI\\NDI 6 Tools\\Runtime',
+  'C:\\Program Files\\NDI\\NDI 6 Tools\\Router',
   'C:\\Program Files\\NDI\\NDI 6 Runtime\\v6',
   'C:\\Program Files\\NDI\\NDI 6 Runtime',
   'C:\\Program Files\\NDI\\NDI 5 Runtime',

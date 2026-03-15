@@ -58,6 +58,20 @@ jobs:
         continue-on-error: true
         run: npx @electron/rebuild -f -w grandiose
 
+      # grandiose v0.0.4 bundles a stale NDI v3.5.9 DLL (from 2018).
+      # NDI v3 uses an old discovery protocol that NDI v5/v6 receivers
+      # (OBS NDI plugin, NDI Tools 6, vMix) cannot see. Removing these
+      # DLLs forces Windows to load the user's system NDI v5/v6 runtime
+      # instead — which uses the modern mDNS-based discovery protocol.
+      # main.ts injects the NDI 6 Tools runtime path into PATH before
+      # requiring grandiose, so the v6 DLL is found via PATH lookup.
+      - name: Remove bundled NDI v3 DLLs (force NDI v5+ runtime)
+        shell: powershell
+        run: |
+          Remove-Item "node_modules/grandiose/build/Release/Processing.NDI.Lib.x64.dll" -ErrorAction SilentlyContinue
+          Remove-Item "node_modules/grandiose/lib/win_x64/Processing.NDI.Lib.x64.dll" -ErrorAction SilentlyContinue
+          Write-Host "Removed bundled NDI v3 DLLs — app will use system NDI v5/v6 runtime"
+
       # 1. vite build  → dist/
       # 2. tsc (electron)  → dist-electron/
       - name: Build renderer + main process
