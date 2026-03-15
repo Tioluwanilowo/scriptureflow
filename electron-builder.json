@@ -37,7 +37,7 @@
     "shortcutName": "ScriptureFlow",
     "installerIcon": "public/favicon.ico",
     "uninstallerIcon": "public/favicon.ico",
-    "include": "build/installer.nsh"
+    "include": "electron/installer.nsh"
   },
 
   "npmRebuild": false,
