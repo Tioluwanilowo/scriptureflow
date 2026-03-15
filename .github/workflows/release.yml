@@ -38,19 +38,17 @@ jobs:
         run: node scripts/download-bibles.js
         continue-on-error: true
 
-      # grandiose v0.0.4 passes string literals to a char* parameter — modern
-      # MSVC (C2664) rejects this. Patch the declaration and definition to const.
-      - name: Patch grandiose for MSVC const-string compatibility
+      # grandiose v0.0.4 passes string literals to char* parameters — modern
+      # MSVC rejects this throughout the codebase. The simplest fix is to add
+      # /Zc:strictStrings- to binding.gyp so MSVC allows it for this module only.
+      - name: Patch grandiose binding.gyp for MSVC compatibility
         shell: powershell
         run: |
-          foreach ($f in @("node_modules/grandiose/src/grandiose_util.h","node_modules/grandiose/src/grandiose_util.cc")) {
-            if (Test-Path $f) {
-              $t = [IO.File]::ReadAllText($f)
-              $t = $t.Replace("(napi_env env, carrier* c, char* file, int32_t line)", "(napi_env env, carrier* c, const char* file, int32_t line)")
-              [IO.File]::WriteAllText($f, $t)
-              Write-Host "Patched $f"
-            }
-          }
+          $gyp = "node_modules/grandiose/binding.gyp"
+          $t = [IO.File]::ReadAllText($gyp)
+          $t = $t.Replace('"target_name": "grandiose"', '"target_name": "grandiose", "msvs_settings": { "VCCLCompilerTool": { "AdditionalOptions": ["/Zc:strictStrings-"] } }')
+          [IO.File]::WriteAllText($gyp, $t)
+          Write-Host "Patched binding.gyp"
 
       # Compile grandiose against the packaged Electron version.
       # grandiose bundles the NDI SDK headers inside the npm package (lib/ndi/),
