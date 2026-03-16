@@ -2,32 +2,29 @@
   "appId": "com.scriptureflow.app",
   "productName": "ScriptureFlow",
   "copyright": "Copyright © 2026",
-
   "directories": {
     "output": "release",
     "buildResources": "public"
   },
-
   "files": [
     "dist/**/*",
     "dist-electron/**/*",
     "package.json"
   ],
-
   "asarUnpack": [
     "**/node_modules/grandiose/**"
   ],
-
   "win": {
     "icon": "public/favicon.ico",
     "target": [
       {
         "target": "nsis",
-        "arch": ["x64"]
+        "arch": [
+          "x64"
+        ]
       }
     ]
   },
-
   "nsis": {
     "oneClick": false,
     "perMachine": false,
@@ -39,11 +36,10 @@
     "uninstallerIcon": "public/favicon.ico",
     "include": "electron/installer.nsh"
   },
-
   "npmRebuild": false,
-
   "publish": {
     "provider": "github",
     "releaseType": "release"
-  }
+  },
+  "afterPack": "scripts/electron-after-pack.cjs"
 }

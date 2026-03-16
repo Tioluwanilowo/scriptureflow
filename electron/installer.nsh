@@ -1,7 +1,5 @@
 ; Custom NSIS installer script for ScriptureFlow
-; Adds Windows Firewall rules so NDI discovery packets can reach the network.
-; NDI uses multicast UDP for source discovery — without these rules, the source
-; starts and streams but cannot be found by OBS, vMix, or other NDI receivers.
+; Adds Windows Firewall rules and hydrates the NDI 6 runtime DLL at install time.
 
 !macro customInstall
   ; Remove any stale rule first (ignore errors if it doesn't exist)
@@ -13,12 +11,55 @@
   ; Allow outbound NDI traffic (discovery multicast + streaming)
   nsExec::ExecToLog '"$SYSDIR\netsh.exe" advfirewall firewall add rule name="ScriptureFlow NDI" dir=out action=allow program="$INSTDIR\ScriptureFlow.exe" protocol=any'
 
-  ; Copy the NDI v6 DLL next to grandiose.node so Windows loads it via the
-  ; same-directory search path (highest priority) rather than relying on PATH.
-  ; This ensures NDIlib_send_create2 (v6 mDNS discovery) is available so OBS,
-  ; vMix, and NDI Tools 6 can discover the ScriptureFlow source.
-  ; Only runs if NDI 6 Tools is already installed on this machine.
-  nsExec::ExecToLog 'cmd /c if exist "$PROGRAMFILES64\NDI\NDI 6 Tools\Runtime\Processing.NDI.Lib.x64.dll" copy /Y "$PROGRAMFILES64\NDI\NDI 6 Tools\Runtime\Processing.NDI.Lib.x64.dll" "$INSTDIR\resources\app.asar.unpacked\node_modules\grandiose\build\Release\Processing.NDI.Lib.x64.dll"'
+  ; Locate NDI 6 runtime DLL from common install paths (Tools + Runtime variants)
+  StrCpy $0 ""
+
+  IfFileExists "$PROGRAMFILES64\NDI\NDI 6 Tools\Runtime\Processing.NDI.Lib.x64.dll" 0 +2
+    StrCpy $0 "$PROGRAMFILES64\NDI\NDI 6 Tools\Runtime\Processing.NDI.Lib.x64.dll"
+  IfFileExists "$0" ndi_copy 0
+
+  IfFileExists "$PROGRAMFILES64\NDI\NDI 6 Tools\Router\Processing.NDI.Lib.x64.dll" 0 +2
+    StrCpy $0 "$PROGRAMFILES64\NDI\NDI 6 Tools\Router\Processing.NDI.Lib.x64.dll"
+  IfFileExists "$0" ndi_copy 0
+
+  IfFileExists "$PROGRAMFILES64\NDI\NDI 6 Runtime\v6\Processing.NDI.Lib.x64.dll" 0 +2
+    StrCpy $0 "$PROGRAMFILES64\NDI\NDI 6 Runtime\v6\Processing.NDI.Lib.x64.dll"
+  IfFileExists "$0" ndi_copy 0
+
+  IfFileExists "$PROGRAMFILES64\NDI\NDI 6 Runtime\Processing.NDI.Lib.x64.dll" 0 +2
+    StrCpy $0 "$PROGRAMFILES64\NDI\NDI 6 Runtime\Processing.NDI.Lib.x64.dll"
+  IfFileExists "$0" ndi_copy 0
+
+  IfFileExists "$PROGRAMFILES\NDI\NDI 6 Tools\Runtime\Processing.NDI.Lib.x64.dll" 0 +2
+    StrCpy $0 "$PROGRAMFILES\NDI\NDI 6 Tools\Runtime\Processing.NDI.Lib.x64.dll"
+  IfFileExists "$0" ndi_copy 0
+
+  IfFileExists "$PROGRAMFILES\NDI\NDI 6 Tools\Router\Processing.NDI.Lib.x64.dll" 0 +2
+    StrCpy $0 "$PROGRAMFILES\NDI\NDI 6 Tools\Router\Processing.NDI.Lib.x64.dll"
+  IfFileExists "$0" ndi_copy 0
+
+  IfFileExists "$PROGRAMFILES\NDI\NDI 6 Runtime\v6\Processing.NDI.Lib.x64.dll" 0 +2
+    StrCpy $0 "$PROGRAMFILES\NDI\NDI 6 Runtime\v6\Processing.NDI.Lib.x64.dll"
+  IfFileExists "$0" ndi_copy 0
+
+  IfFileExists "$PROGRAMFILES\NDI\NDI 6 Runtime\Processing.NDI.Lib.x64.dll" 0 +2
+    StrCpy $0 "$PROGRAMFILES\NDI\NDI 6 Runtime\Processing.NDI.Lib.x64.dll"
+  IfFileExists "$0" ndi_copy 0
+
+  DetailPrint "NDI runtime DLL not found in common NDI 6 install paths."
+  Goto ndi_copy_done
+
+ndi_copy:
+  ; Copy the runtime DLL next to every packaged grandiose.node candidate.
+  IfFileExists "$INSTDIR\resources\app.asar.unpacked\node_modules\grandiose\build\Release\grandiose.node" 0 +2
+    CopyFiles /SILENT "$0" "$INSTDIR\resources\app.asar.unpacked\node_modules\grandiose\build\Release\Processing.NDI.Lib.x64.dll"
+
+  IfFileExists "$INSTDIR\resources\app.asar.unpacked\node_modules\grandiose\bin\win32-x64-143\grandiose.node" 0 +2
+    CopyFiles /SILENT "$0" "$INSTDIR\resources\app.asar.unpacked\node_modules\grandiose\bin\win32-x64-143\Processing.NDI.Lib.x64.dll"
+
+  DetailPrint "Copied NDI runtime DLL from $0"
+
+ndi_copy_done:
 !macroend
 
 !macro customUnInstall
