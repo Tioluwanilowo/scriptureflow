@@ -50,12 +50,12 @@
   Goto ndi_copy_done
 
 ndi_copy:
-  ; Copy the runtime DLL next to every packaged grandiose.node candidate.
+  ; Copy to classic build output location if present.
   IfFileExists "$INSTDIR\resources\app.asar.unpacked\node_modules\grandiose\build\Release\grandiose.node" 0 +2
     CopyFiles /SILENT "$0" "$INSTDIR\resources\app.asar.unpacked\node_modules\grandiose\build\Release\Processing.NDI.Lib.x64.dll"
 
-  IfFileExists "$INSTDIR\resources\app.asar.unpacked\node_modules\grandiose\bin\win32-x64-143\grandiose.node" 0 +2
-    CopyFiles /SILENT "$0" "$INSTDIR\resources\app.asar.unpacked\node_modules\grandiose\bin\win32-x64-143\Processing.NDI.Lib.x64.dll"
+  ; Copy to all ABI-specific folders (win32-x64-*) so Electron ABI bumps are covered.
+  nsExec::ExecToLog 'cmd /c for /d %D in ("$INSTDIR\resources\app.asar.unpacked\node_modules\grandiose\bin\win32-x64-*") do if exist "%D\grandiose.node" copy /Y "$0" "%D\Processing.NDI.Lib.x64.dll"'
 
   DetailPrint "Copied NDI runtime DLL from $0"
 
